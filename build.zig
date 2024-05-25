@@ -6,14 +6,14 @@ pub fn build(b: *std.Build) !void {
 
     const lib = b.addStaticLibrary(.{
         .name = "globlin",
-        .root_source_file = .{ .path = "src/glob.zig" },
+        .root_source_file = b.path("src/glob.zig"),
         .target = target,
         .optimize = optimize,
     });
     b.installArtifact(lib);
 
     const main_tests = b.addTest(.{
-        .root_source_file = .{ .path = "src/glob.zig" },
+        .root_source_file = b.path("src/glob.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -35,13 +35,13 @@ pub fn build(b: *std.Build) !void {
 
     const fuzz_lib = b.addStaticLibrary(.{
         .name = "globlin-fuzz",
-        .root_source_file = .{ .path = "src/glob.zig" },
+        .root_source_file = b.path("src/glob.zig"),
         .target = target,
         .optimize = .Debug,
     });
     fuzz_lib.want_lto = true;
     fuzz_lib.bundle_compiler_rt = true;
-    fuzz_lib.force_pic = true;
+    fuzz_lib.pie = true;
 
     const fuzz_executable_name = "fuzz";
     const fuzz_exe_path = try std.fs.path.join(
@@ -51,7 +51,7 @@ pub fn build(b: *std.Build) !void {
 
     const fuzz_compile = b.addSystemCommand(&.{ "afl-clang-lto", "-o", fuzz_exe_path });
     fuzz_compile.addArtifactArg(fuzz_lib);
-    const fuzz_install = b.addInstallBinFile(.{ .path = fuzz_exe_path }, fuzz_executable_name);
+    const fuzz_install = b.addInstallBinFile(.{ .cwd_relative = fuzz_exe_path }, fuzz_executable_name);
     const fuzz_compile_run = b.step(
         "fuzz",
         "Build executable for fuzz testing using afl-clang-lto",
@@ -62,7 +62,7 @@ pub fn build(b: *std.Build) !void {
     // Compile a companion exe for debugging crashes
     const fuzz_debug_exe = b.addExecutable(.{
         .name = "fuzz-debug",
-        .root_source_file = .{ .path = "src/fuzz.zig" },
+        .root_source_file = b.path("src/fuzz.zig"),
         .target = target,
         .optimize = .Debug,
     });

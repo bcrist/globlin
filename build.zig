@@ -1,5 +1,8 @@
 const std = @import("std");
 
+// Allow usage in build.zig
+pub const match = @import("src/glob.zig").match;
+
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
